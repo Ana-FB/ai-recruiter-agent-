@@ -12,8 +12,7 @@
 
 ## 📸 Workflow
 
-![AI Recruiter Agent Workflow](<img width="1568" height="542" alt="image" src="https://github.com/user-attachments/assets/ab8eb210-e47d-43aa-9ba2-ce9ff28c4321" />
-)
+<img width="1568" height="542" alt="image" src="https://github.com/user-attachments/assets/ab8eb210-e47d-43aa-9ba2-ce9ff28c4321" />)
 
 ---
 

@@ -150,9 +150,9 @@ Agente de IA conversacional construido en n8n que actúa como AI Recruiter Senio
 ### Prerrequisitos
 
 - n8n instalado (self-hosted o cloud)
-- Cuenta de [Anthropic](https://console.anthropic.com) con API key
-- Cuenta de [SerpAPI](https://serpapi.com) con API key
-- Cuenta de [Airtable](https://airtable.com) con una base y tabla configurada
+- Cuenta de [Anthropic]) con API key
+- Cuenta de [SerpAPI]) con API key
+- Cuenta de [Airtable]) con una base y tabla configurada
 
 ### Pasos
 
@@ -229,11 +229,3 @@ Próximos pasos sugeridos: ...
 
 > Saludos y mensajes cortos (menos de 15 caracteres) no consumen herramientas ni créditos de API.
 
----
-
-## Stack
-
-- [n8n](https://n8n.io) — orquestación de workflows
-- [Claude Sonnet 4.6](https://anthropic.com) — modelo de lenguaje
-- [SerpAPI](https://serpapi.com) — búsqueda Google / LinkedIn
-- [Airtable](https://airtable.com) — base de datos del shortlist

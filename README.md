@@ -150,9 +150,9 @@ Agente de IA conversacional construido en n8n que actúa como AI Recruiter Senio
 ### Prerrequisitos
 
 - n8n instalado (self-hosted o cloud)
-- Cuenta de [Anthropic]) con API key
-- Cuenta de [SerpAPI]) con API key
-- Cuenta de [Airtable]) con una base y tabla configurada
+- Cuenta de Anthropic con API key
+- Cuenta de API de Custom Search 
+- Cuenta de Airtable con una base y tabla configurada
 
 ### Pasos
 

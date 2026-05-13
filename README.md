@@ -18,7 +18,7 @@
 
 ## ⚡ ¿Qué hace?
 
-1. El recruiter describe una vacante en **lenguaje natural** por el chat de n8n
+1. El recruiter describe una vacante en **lenguaje natural** por el chat
 2. El agente analiza los requisitos y construye una **query optimizada** para buscar perfiles en LinkedIn vía SerpAPI
 3. Evalúa cada candidato con un **score de match del 0 al 100**
 4. Los candidatos con score ≥ 60 se guardan automáticamente en **Airtable**
@@ -51,7 +51,7 @@
 
 | # | Nodo | Tipo | Función |
 |---|------|------|---------|
-| 1 | Chat con Recruiter | `chatTrigger` | Punto de entrada — recibe el mensaje vía chat UI de n8n |
+| 1 | Chat con Recruiter | `chatTrigger` | Punto de entrada — recibe el mensaje vía chat  |
 | 2 | ¿Es una vacante? | `IF` | Si el mensaje tiene más de 15 caracteres pasa al agente; si no, devuelve saludo |
 | 3 | Respuesta Saludo | `Set` | Mensaje de bienvenida para inputs cortos |
 | 4 | AI Recruiter Agent | `agent` (toolsAgent) | Orquesta el flujo completo de sourcing |

@@ -247,16 +247,16 @@ Ofrezco **implementación personalizada** adaptada a tu stack, proceso de recrui
 - ✅ Ajuste de criterios de scoring a tus vacantes habituales
 - ✅ Soporte post-implementación
 
-📩 **Contacto:** [tu-email@dominio.com] · [LinkedIn] · [WhatsApp]
+📩 **Contacto:** [ani.fb95@gmail.com](mailto:ani.fb95@gmail.com) · [LinkedIn](https://www.linkedin.com/in/anaferreirabezerra) · [WhatsApp](https://wa.me/5491135077374)
 
 ---
 
 ## 👤 Autor
 
-**Ferreira** — Automation & People Analytics Builder  
+**Ana Ferreira** — Automation & People Analytics Builder  
 Especializado en workflows de IA aplicados a HR Tech y Talent Acquisition.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-conectar-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/tu-perfil)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-conectar-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/anaferreirabezerra)
 
 ---
 

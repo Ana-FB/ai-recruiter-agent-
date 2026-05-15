@@ -1,100 +1,133 @@
 # 🤖 AI Recruiter Agent — Sourcing IT
 
-![n8n](https://img.shields.io/badge/n8n-workflow-EA4B71?style=flat-square&logo=n8n&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude-Sonnet_4.6-6C3BDB?style=flat-square)
-![Airtable](https://img.shields.io/badge/Airtable-shortlist-18BFFF?style=flat-square&logo=airtable&logoColor=white)
-![SerpAPI](https://img.shields.io/badge/SerpAPI-LinkedIn_Search-4285F4?style=flat-square)
-![Status](https://img.shields.io/badge/status-production-brightgreen?style=flat-square)
+![n8n](https://img.shields.io/badge/n8n-workflow-orange?logo=n8n&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-Sonnet_4.6-8B5CF6?logo=anthropic&logoColor=white)
+![Slack](https://img.shields.io/badge/Slack-integration-4A154B?logo=slack&logoColor=white)
+![Airtable](https://img.shields.io/badge/Airtable-shortlist-18BFFF?logo=airtable&logoColor=white)
+![SerpAPI](https://img.shields.io/badge/SerpAPI-LinkedIn_search-green)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red)
 
-> Agente de IA conversacional construido en n8n que actúa como AI Recruiter Senior especializado en Talent Acquisition IT. Recibe la descripción de una vacante por chat, busca candidatos en LinkedIn, los evalúa con scoring automático y guarda los mejores en un shortlist en Airtable.
+Agente de IA conversacional construido en **n8n** que actúa como AI Recruiter Senior especializado en Talent Acquisition IT. Recibe la descripción de una vacante por Slack, busca candidatos en LinkedIn, los evalúa con scoring automático y guarda los mejores en un shortlist en Airtable.
 
----
-
-## 📸 Workflow
-
-<img width="1568" height="542" alt="image" src="https://github.com/user-attachments/assets/ab8eb210-e47d-43aa-9ba2-ce9ff28c4321"/>
+> 👤 **Creado por [Ana Ferreira](https://www.linkedin.com/in/anaferreirabezerra)** — HR Operations Analyst · People Analytics · HR Automation Specialist · 📩 [ani.fb95@gmail.com](mailto:ani.fb95@gmail.com) · [WhatsApp](https://wa.me/5491135077374)
 
 ---
 
-## ⚡ ¿Qué hace?
+## Tabla de contenidos
 
-1. El recruiter describe una vacante en **lenguaje natural** por el chat
-2. El agente analiza los requisitos y construye una **query optimizada** para buscar perfiles en LinkedIn vía SerpAPI
-3. Evalúa cada candidato con un **score de match del 0 al 100**
-4. Los candidatos con score ≥ 60 se guardan automáticamente en **Airtable**
-5. Al finalizar presenta un **resumen rankeado** con próximos pasos sugeridos
+- [¿Qué hace?](#qué-hace)
+- [Arquitectura](#arquitectura)
+- [Nodos del workflow](#nodos-del-workflow)
+- [Flujo de ejecución](#flujo-de-ejecución)
+- [Criterios de scoring](#criterios-de-scoring)
+- [Integraciones y credenciales](#integraciones-y-credenciales)
+- [Configuración](#configuración)
+- [Cómo usar](#cómo-usar)
+- [Output esperado](#output-esperado)
+- [Límites de operación](#límites-de-operación)
+- [Stack](#stack)
 
 ---
 
-## 🏗️ Arquitectura
+## ¿Qué hace?
+
+1. El recruiter describe una vacante en lenguaje natural por un canal de Slack
+2. El agente responde de inmediato confirmando que está buscando
+3. Analiza los requisitos y construye una query optimizada para buscar perfiles en LinkedIn vía Google (SerpAPI)
+4. Evalúa cada candidato con un score de match del 0 al 100
+5. Los candidatos con score ≥ 60 se guardan automáticamente en Airtable
+6. Al finalizar presenta un resumen rankeado con próximos pasos sugeridos
+
+---
+
+## Arquitectura
 
 ```
-[Chat Trigger]
+[Slack Trigger]
       │
       ▼
-[¿Es una vacante?] ── NO (< 15 chars) ──▶ [Respuesta Saludo]
+[Filtro Bot]  ── es bot ──▶ (descartado, sin conexión)
+      │
+      es humano
+      │
+      ▼
+[¿Es una vacante?] ── NO (< 15 chars) ──▶ [Respuesta Saludo] ──▶ [Slack Send Saludo]
       │
       SÍ
       │
       ▼
-[AI Recruiter Agent]  ◀── [Claude Sonnet 4.6]
-      │                ◀── [Memoria de Sesión (20 msgs)]
+[Slack Send Procesando]   → "Entendido, estoy buscando..."
       │
-      ├──▶ [buscar_candidatos]            → SerpAPI / Google Search
-      ├──▶ [guardar_candidato_shortlist]  → Airtable (POST)
-      └──▶ [consultar_shortlist]          → Airtable (GET)
+      ▼
+[AI Recruiter Agent]  ◀── [Claude Sonnet 4.6]
+      │               ◀── [Memoria de Sesión (20 msgs)]
+      │
+      ├──▶ [buscar_candidatos]           → SerpAPI / Google Search
+      ├──▶ [guardar_candidato_shortlist] → Airtable (POST)
+      └──▶ [consultar_shortlist]         → Airtable (GET)
+      │
+      ▼
+[Slack Send Respuesta]    → resumen final rankeado
 ```
 
 ---
 
-## 🧩 Nodos del workflow
+## Nodos del workflow
 
 | # | Nodo | Tipo | Función |
 |---|------|------|---------|
-| 1 | Chat con Recruiter | `chatTrigger` | Punto de entrada — recibe el mensaje vía chat  |
-| 2 | ¿Es una vacante? | `IF` | Si el mensaje tiene más de 15 caracteres pasa al agente; si no, devuelve saludo |
-| 3 | Respuesta Saludo | `Set` | Mensaje de bienvenida para inputs cortos |
-| 4 | AI Recruiter Agent | `agent` (toolsAgent) | Orquesta el flujo completo de sourcing |
-| 5 | Anthropic Chat Model | `lmChatAnthropic` | Claude Sonnet 4.6 como LLM del agente |
-| 6 | Memoria de Sesión | `memoryBufferWindow` | Contexto de las últimas 20 interacciones |
-| 7 | buscar_candidatos | `httpRequestTool` | Búsqueda de perfiles LinkedIn en Google vía SerpAPI |
-| 8 | guardar_candidato_shortlist | `httpRequestTool` | Guarda candidatos con score ≥ 60 en Airtable |
-| 9 | consultar_shortlist | `httpRequestTool` | Lee el shortlist actual para evitar duplicados |
+| 1 | Slack Trigger | `slackTrigger` | Escucha mensajes en todo el workspace vía webhook |
+| 2 | Filtro Bot | `IF` | Descarta mensajes de bots para evitar loops infinitos |
+| 3 | ¿Es una vacante? | `IF` | Si el mensaje tiene más de 15 caracteres pasa al agente; si no, devuelve saludo |
+| 4 | Slack Send Procesando | `slack` | Respuesta inmediata: "Estoy buscando candidatos..." |
+| 5 | AI Recruiter Agent | `agent (toolsAgent)` | Orquesta el flujo completo de sourcing |
+| 6 | Anthropic Chat Model | `lmChatAnthropic` | Claude Sonnet 4.6 como LLM del agente |
+| 7 | Memoria de Sesión | `memoryBufferWindow` | Contexto de las últimas 20 interacciones |
+| 8 | buscar_candidatos | `httpRequestTool` | Búsqueda de perfiles LinkedIn en Google vía SerpAPI |
+| 9 | guardar_candidato_shortlist | `httpRequestTool` | Guarda candidatos con score ≥ 60 en Airtable |
+| 10 | consultar_shortlist | `httpRequestTool` | Lee el shortlist actual para evitar duplicados |
+| 11 | Slack Send Respuesta | `slack` | Envía el resumen final rankeado al canal |
+| 12 | Respuesta Saludo | `Set` | Mensaje de bienvenida para inputs cortos |
+| 13 | Slack Send Saludo | `slack` | Envía el saludo al canal |
 
 ---
 
-## 🔄 Flujo de ejecución
+## Flujo de ejecución
 
-```
-1. Recruiter envía la descripción de la vacante por chat
+1. Recruiter envía la descripción de la vacante en el canal de Slack
 
-2. Filtro: si el mensaje tiene menos de 15 caracteres → saludo, fin
+2. **Filtro Bot**: si el mensaje viene de un bot → descartado (evita loops)
 
-3. El agente analiza la vacante:
+3. **Filtro**: si el mensaje tiene menos de 15 caracteres → saludo, fin
+
+4. El agente responde de inmediato: `"Entendido, estoy buscando candidatos..."`
+
+5. El agente analiza la vacante:
    - Hard skills requeridas
    - Nivel de seniority
    - Stack tecnológico
    - Idioma y ubicación
 
-4. Consulta Airtable para obtener URLs ya guardadas (evitar duplicados)
+6. Consulta Airtable para obtener URLs ya guardadas (evitar duplicados)
 
-5. Construye la search query optimizada, ejemplo:
-   site:linkedin.com/in "Senior React Developer" "TypeScript" "Argentina"
+7. Construye la search query, ejemplo:
+   ```
+   site:linkedin.com/in "Senior Data Engineer" "Spark" "Databricks" "Latinoamérica"
+   ```
 
-6. Llama a SerpAPI → extrae de cada resultado:
+8. Llama a SerpAPI → extrae de cada resultado:
    - Nombre completo, cargo actual, URL de LinkedIn, snippet del perfil
 
-7. Calcula match score (0–100) por candidato
+9. Calcula match score (0–100) por candidato
 
-8. Para cada candidato con score ≥ 60 y URL no duplicada:
-   → Llama a guardar_candidato_shortlist (Airtable POST)
+10. Para cada candidato con **score ≥ 60** y URL no duplicada:
+    → Llama a `guardar_candidato_shortlist` (Airtable POST)
 
-9. Presenta resumen final rankeado por score descendente
-```
+11. Presenta resumen final rankeado por score descendente en Slack
 
 ---
 
-## 📊 Criterios de scoring
+## Criterios de scoring
 
 | Criterio | Peso |
 |----------|------|
@@ -107,68 +140,80 @@
 
 **Umbral de corte:** score ≥ 60 para guardar en shortlist.
 
-**Seniority detectado automáticamente:**
-
-| Nivel | Experiencia | Descripción |
-|-------|-------------|-------------|
-| Junior | 0–2 años | Tareas asistidas |
-| Semi Senior | 2–4 años | Autonomía parcial |
-| Senior | +5 años | Ownership técnico |
-| Staff / Lead | Variable | Liderazgo técnico, decisiones de arquitectura |
+**Seniority detectado:**
+- **Junior** — 0 a 2 años, tareas asistidas
+- **Semi Senior** — 2 a 4 años, autonomía parcial
+- **Senior** — más de 5 años, ownership técnico
+- **Staff/Lead** — liderazgo técnico, decisiones de arquitectura
 
 ---
 
-## 🔌 Integraciones y credenciales
+## Integraciones y credenciales
 
 | Servicio | Uso | Configuración |
 |----------|-----|---------------|
-| **Anthropic** | Claude Sonnet 4.6 como LLM | Credencial `Anthropic account` en n8n |
-| **SerpAPI** | Búsqueda de perfiles LinkedIn vía Google | API key en el nodo `buscar_candidatos` |
-| **Airtable** | Almacenamiento del shortlist | Credencial `Airtable Personal Access Token account` en n8n |
+| Anthropic | Claude Sonnet 4.6 como LLM | Credencial Anthropic account en n8n |
+| Slack | Canal de entrada y salida del agente | Credencial Slack account en n8n + Slack App con webhook |
+| SerpAPI | Búsqueda de perfiles LinkedIn vía Google | API key en el parámetro `api_key` del nodo `buscar_candidatos` |
+| Airtable | Almacenamiento del shortlist | Credencial Airtable Personal Access Token account en n8n |
 
 ### Campos requeridos en Airtable
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `Nombre` | Texto | Nombre completo del candidato |
-| `Rol Actual` | Texto | Cargo actual |
-| `Ubicación` | Texto | Ciudad y país |
-| `LinkedIn URL` | URL | Perfil de LinkedIn |
-| `Experiencia` | Texto largo | Resumen de experiencia |
-| `Educación` | Texto | Formación académica |
-| `Skills Match` | Texto | Skills que matchean, separadas por coma |
-| `Skills Faltantes` | Texto | Skills que faltan, separadas por coma |
-| `Seniority` | Select | Junior / Semi Senior / Senior / Staff/Lead |
-| `Match Score` | Número | 0 a 100 |
-| `Vacante Aplicada` | Texto | Nombre o descripción de la vacante |
-| `Estado` | Select | Nuevo / En proceso / Contactado / Descartado |
+| Nombre | Texto | Nombre completo del candidato |
+| Rol Actual | Texto | Cargo actual |
+| Ubicación | Texto | Ciudad y país |
+| LinkedIn URL | URL | Perfil de LinkedIn |
+| Experiencia | Texto largo | Resumen de experiencia |
+| Educación | Texto | Formación académica |
+| Skills Match | Texto | Skills que matchean, separadas por coma |
+| Skills Faltantes | Texto | Skills que faltan, separadas por coma |
+| Seniority | Select | Junior / Semi Senior / Senior / Staff/Lead |
+| Match Score | Número | 0 a 100 |
+| Vacante Aplicada | Texto | Nombre o descripción de la vacante |
+| Estado | Select | Nuevo / En proceso / Contactado / Descartado |
 
 ---
 
-## ⚙️ Configuración
+## Configuración
 
 ### Prerrequisitos
 
-- n8n instalado (self-hosted o cloud)
-- Cuenta de Anthropic con API key activa
-- Cuenta de SerpAPI con API key
-- Cuenta de Airtable con base y tabla configuradas
+- [n8n](https://n8n.io) instalado (self-hosted o cloud)
+- Cuenta de [Anthropic](https://console.anthropic.com) con API key
+- Cuenta de [Slack](https://api.slack.com/apps) con una Slack App creada
+- Cuenta de [SerpAPI](https://serpapi.com) con API key
+- Cuenta de [Airtable](https://airtable.com) con una base y tabla configurada
 
 ### Pasos
 
-1. Importar el workflow JSON en n8n *(disponible bajo solicitud — ver sección de contacto)*
+1. Importar el workflow JSON en n8n
 2. Configurar las credenciales:
-   - `Anthropic account` → API key de Anthropic
-   - `Airtable Personal Access Token account` → token de Airtable
-3. En el nodo `buscar_candidatos`, reemplazar el valor de `api_key` con tu clave de SerpAPI
+   - **Anthropic account** → API key de Anthropic
+   - **Slack account** → token de la Slack App
+   - **Airtable Personal Access Token account** → token de Airtable
+3. En el nodo `buscar_candidatos`, reemplazar el valor de `api_key` con tu API key de SerpAPI
 4. Verificar el ID de la base y tabla de Airtable en los nodos `guardar_candidato_shortlist` y `consultar_shortlist`
-5. Activar el workflow y abrir el chat
+
+### Configuración de la Slack App
+
+1. Crear una nueva app en [https://api.slack.com/apps](https://api.slack.com/apps) usando un manifest
+2. Habilitar **Event Subscriptions** y agregar la URL del webhook de n8n:
+   ```
+   https://tu-dominio.com/webhook/TU_WEBHOOK_ID
+   ```
+3. Suscribirse al evento `message.channels`
+4. Instalar la app en el workspace y agregarla al canal deseado
+5. Activar el workflow en n8n **antes** de verificar el webhook en Slack
+
+> **Nota:** Si n8n está detrás de Cloudflare Access, crear una política de tipo **Bypass** para la ruta `/webhook` que permita acceso de todos (Everyone), de lo contrario Slack no podrá verificar el endpoint.
 
 ---
 
-## 💬 Cómo usar
+## Cómo usar
 
-1. Abrir el workflow en n8n y hacer clic en el botón **Chat**
+1. Agregar la Slack App al canal donde quieras usar el agente
 2. Escribir la vacante en lenguaje natural:
 
 ```
@@ -177,12 +222,19 @@ experiencia en arquitectura de microservicios,
 preferentemente en Argentina, inglés avanzado requerido.
 ```
 
-3. El agente realiza la búsqueda, evaluación y guardado automáticamente
-4. Al finalizar devuelve un resumen rankeado con tabla y próximos pasos sugeridos
+3. El agente responde de inmediato confirmando que está buscando
+4. Realiza la búsqueda, evaluación y guardado automáticamente
+5. Al finalizar devuelve un resumen con tabla rankeada y próximos pasos sugeridos
 
 ---
 
-## 📤 Output esperado
+## Output esperado
+
+### Confirmación inmediata
+
+```
+Entendido, estoy buscando candidatos en LinkedIn... dame un momento.
+```
 
 ### Por candidato (score ≥ 60)
 
@@ -193,34 +245,32 @@ preferentemente en Argentina, inglés avanzado requerido.
   "current_role": "Cargo actual del candidato",
   "location": "Ciudad, País",
   "seniority_detected": "Senior",
-  "match_score": 82,
-  "skills_match": ["Python", "FastAPI", "microservicios"],
-  "missing_skills": ["Kubernetes"],
-  "strengths": ["Stack alineado", "Experiencia en scale-ups"],
-  "red_flags": [],
-  "summary": "Perfil sólido con ownership técnico comprobado. Stack 100% alineado a la vacante."
+  "match_score": 0,
+  "skills_match": ["skill_1", "skill_2"],
+  "missing_skills": ["skill_faltante"],
+  "strengths": ["fortaleza_1", "fortaleza_2"],
+  "red_flags": ["red_flag_1"],
+  "summary": "Análisis crítico del perfil en 2-3 líneas."
 }
 ```
 
 ### Resumen final
 
 ```
-Total perfiles analizados: 10
-Total perfiles saltados por duplicado: 2
-Total guardados en Airtable: 5
+Total perfiles analizados: N
+Total perfiles saltados por duplicado: N
+Total guardados en Airtable: N
 
-| Nombre          | Rol                     | Ubicación        | Score |
-|-----------------|-------------------------|------------------|-------|
-| Nombre Apellido | Senior Backend Dev      | Buenos Aires, AR |  82   |
-| Nombre Apellido | Backend Engineer        | Córdoba, AR      |  74   |
-| ...             | ...                     | ...              | ...   |
+| Nombre | Rol | Ubicación | Score |
+|--------|-----|-----------|-------|
+| ...    | ... | ...       | ...   |
 
-Próximos pasos sugeridos: Iniciar outreach por LinkedIn a los 3 perfiles con score > 75.
+Próximos pasos sugeridos: ...
 ```
 
 ---
 
-## 🚧 Límites de operación
+## Límites de operación
 
 | Límite | Valor |
 |--------|-------|
@@ -229,35 +279,34 @@ Próximos pasos sugeridos: Iniciar outreach por LinkedIn a los 3 perfiles con sc
 | Guardados en Airtable por conversación | 10 |
 | Mensajes en memoria de sesión | 20 |
 
-> ℹ️ Saludos y mensajes cortos (menos de 15 caracteres) no consumen herramientas ni créditos de API.
+> **Nota:** Saludos y mensajes cortos (menos de 15 caracteres) no consumen herramientas ni créditos de API.
 
 ---
 
-## 💼 ¿Quieres este agente?
+## Stack
 
-El workflow **no está disponible públicamente** para proteger la propiedad intelectual.
-
-Ofrezco **implementación personalizada** adaptada a tu stack, proceso de recruiting y herramientas existentes.
-
-### ¿Qué incluye la implementación?
-
-- ✅ Configuración completa del workflow en tu instancia de n8n
-- ✅ Integración con tus credenciales (Anthropic, SerpAPI, Airtable)
-- ✅ Adaptación del sistema prompt a tu proceso de recruiting
-- ✅ Ajuste de criterios de scoring a tus vacantes habituales
-- ✅ Soporte post-implementación
-
-📩 **Contacto:** [ani.fb95@gmail.com](mailto:ani.fb95@gmail.com) · [LinkedIn](https://www.linkedin.com/in/anaferreirabezerra) · [WhatsApp](https://wa.me/5491135077374)
+| Herramienta | Rol |
+|-------------|-----|
+| [n8n](https://n8n.io) | Orquestación de workflows |
+| [Claude Sonnet 4.6](https://anthropic.com) | Modelo de lenguaje |
+| [Slack](https://slack.com) | Interfaz de chat |
+| [SerpAPI](https://serpapi.com) | Búsqueda Google / LinkedIn |
+| [Airtable](https://airtable.com) | Base de datos del shortlist |
 
 ---
 
 ## 👤 Autor
 
-**Ana Ferreira** — Automation & People Analytics Builder  
-Especializado en workflows de IA aplicados a HR Tech y Talent Acquisition.
+**Ana Ferreira**  
+HR Operations Analyst · People Analytics · HR Automation Specialist · BI & Data Analyst  
+SQL · Power BI · Looker Studio · n8n · Make · SAP SuccessFactors
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-conectar-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/anaferreirabezerra)
+📩 **Contacto:** [ani.fb95@gmail.com](mailto:ani.fb95@gmail.com) · [LinkedIn](https://www.linkedin.com/in/anaferreirabezerra) · [WhatsApp](https://wa.me/5491135077374)
 
 ---
 
-*Este repositorio es de carácter demostrativo. El workflow completo está disponible únicamente bajo solicitud de implementación.*
+## ⚠️ Licencia
+
+© 2025 Ana Ferreira. Todos los derechos reservados.
+
+Este proyecto es de **uso personal y educativo**. Queda prohibida su reproducción, distribución o uso comercial sin autorización expresa de la autora.

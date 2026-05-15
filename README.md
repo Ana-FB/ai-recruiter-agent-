@@ -13,6 +13,8 @@ Agente de IA conversacional construido en **n8n** que actúa como AI Recruiter S
 
 > 🔒 **El workflow no se incluye en este repositorio.** Si estás interesado/a en implementar este agente en tu empresa, podés contactarme para una consultoría de implementación personalizada.
 
+<img width="1382" height="470" alt="image" src="https://github.com/user-attachments/assets/546765cf-1240-465b-af2b-deda32bbe98b" />
+
 ---
 
 ## Tabla de contenidos

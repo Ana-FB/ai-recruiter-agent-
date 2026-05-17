@@ -211,8 +211,6 @@ Agente de IA conversacional construido en **n8n** que actúa como AI Recruiter S
 4. Instalar la app en el workspace y agregarla al canal deseado
 5. Activar el workflow en n8n **antes** de verificar el webhook en Slack
 
-> **Nota:** Si n8n está detrás de Cloudflare Access, crear una política de tipo **Bypass** para la ruta `/webhook` que permita acceso de todos (Everyone), de lo contrario Slack no podrá verificar el endpoint.
-
 ---
 
 ## Cómo usar
